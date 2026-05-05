@@ -17,7 +17,7 @@ This project explores how AI can directly interact with mobile app state through
 Coming soon
 
 
-## 🚀 MVP
+## 🚀 Features (MVP)
 
 - Notes list + detail view
 - AI chat with streaming responses
@@ -29,6 +29,7 @@ Coming soon
 
 ## 🧠 AI Capabilities
 
+- Structured outputs (JSON schema for tool execution)
 - Streaming LLM responses
 - Context-aware prompts
 - Function calling / tool usage
@@ -67,6 +68,23 @@ The AI copilot can understand those notes, summarize them, extract action items,
 - Function calling
 - MVVM / modular architecture
 
+
+## 🧪 Getting Started
+
+### Requirements
+- Xcode 15+
+- iOS 17+
+- OpenAI API key
+
+### Setup
+
+1. Clone the repo
+```bash
+git clone https://github.com/mariusmaricean/ai-copilot-ios.git
+```
+2. Open in Xcode
+3. Add your API key
+4. Run the app
 
 ## 🗺 Roadmap
 
