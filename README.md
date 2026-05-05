@@ -4,12 +4,14 @@ An AI-powered iOS copilot that turns notes into actions using LLMs, streaming re
 
 This project demonstrates how AI can move beyond chat and directly interact with mobile app state through structured actions.
 
+Designed as a production-style architecture, not a prototype.
+
 
 ## 🎥 Demo
 
 Coming soon
 
-## 🚀 MVP Feature Set
+## 🚀 MVP
 
 - Notes list + detail view
 - AI chat with streaming responses
@@ -26,6 +28,12 @@ Coming soon
 - Action extraction from text
 - Lightweight memory system
 
+## 🔍 Why this project
+
+Most AI apps stop at chat.
+
+This project explores how AI can directly interact with mobile app state through structured actions, turning user input into real outcomes.
+
 ## 🏗 Architecture
 
 ```text
@@ -35,9 +43,9 @@ Features
 - Tasks
 
 Core
-- AIClient
-- ToolCalling
-- Persistence
+- AIClient (LLM communication + streaming)
+- ToolCalling (function execution layer)
+- Persistence (SwiftData)
 - DesignSystem
 ```
 
