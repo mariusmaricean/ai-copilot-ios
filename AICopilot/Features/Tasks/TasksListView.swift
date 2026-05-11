@@ -15,7 +15,7 @@ struct TasksListView: View {
     var body: some View {
         List {
             if tasks.isEmpty {
-                ContentUnavailableView(
+                ContentUnavailableView( 
                     "No Tasks Yet",
                     systemImage: "checklist",
                     description: Text("Extract tasks from a note to see them here.")
