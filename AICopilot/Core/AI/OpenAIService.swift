@@ -9,6 +9,7 @@ import Foundation
 
 protocol AIService {
     func streamResponse(for prompt: String) -> AsyncThrowingStream<String, Error>
+    func sendMessage(_ prompt: String) async throws -> String
 }
 
 final class OpenAIService: AIService {
@@ -68,6 +69,49 @@ final class OpenAIService: AIService {
                 }
             }
         }
+    }
+    
+    func sendMessage(_ prompt: String) async throws -> String {
+        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/responses")!)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: Any] = [
+            "model": "gpt-4.1-mini",
+            "input": prompt
+        ]
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+
+        return try Self.extractOutputText(from: data)
+    }
+
+    private static func extractOutputText(from data: Data) throws -> String {
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+
+        guard let output = json?["output"] as? [[String: Any]] else {
+            throw URLError(.cannotParseResponse)
+        }
+
+        for item in output {
+            guard let content = item["content"] as? [[String: Any]] else { continue }
+
+            for contentItem in content {
+                if let text = contentItem["text"] as? String {
+                    return text
+                }
+            }
+        }
+
+        throw URLError(.cannotParseResponse)
     }
 
     private static func extractTextDelta(from jsonString: String) -> String? {

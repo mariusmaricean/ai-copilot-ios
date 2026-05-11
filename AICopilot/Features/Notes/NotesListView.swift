@@ -34,10 +34,20 @@ struct NotesListView: View {
             }
             .navigationTitle("AI Copilot")
             .toolbar {
-                Button {
-                    addNote()
-                } label: {
-                    Image(systemName: "plus")
+                ToolbarItem(placement: .topBarLeading) {
+                    NavigationLink {
+                        TasksListView()
+                    } label: {
+                        Image(systemName: "checklist")
+                    }
+                }
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        addNote()
+                    } label: {
+                        Image(systemName: "plus")
+                    }
                 }
             }
         }

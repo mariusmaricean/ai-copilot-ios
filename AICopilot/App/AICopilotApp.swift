@@ -14,6 +14,6 @@ struct AICopilotApp: App {
         WindowGroup {
             NotesListView()
         }
-        .modelContainer(for:Note.self)
+        .modelContainer(for: [Note.self,TaskItem.self])
     }
 }

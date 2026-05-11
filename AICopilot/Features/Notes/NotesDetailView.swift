@@ -6,16 +6,37 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct NoteDetailView: View {
+    @Environment(\.modelContext) private var modelContext
+
     @Bindable var note: Note
+
+    @FocusState private var isContentFocused: Bool
+
     @State private var chatRoute: ChatRoute?
-    
+    @State private var isExtractingTasks = false
+    @State private var extractionError: String?
+
+    private let taskExtractionService = TaskExtractionService()
+
+    private struct ChatRoute: Identifiable {
+        let id = UUID()
+        let prompt: String
+    }
+
     var body: some View {
         VStack(spacing: 20) {
             titleField
             contentEditor
             copilotActions
+
+            if let extractionError {
+                Text(extractionError)
+                    .font(.footnote)
+                    .foregroundStyle(.red)
+            }
         }
         .padding()
         .navigationTitle("Note")
@@ -24,22 +45,18 @@ struct NoteDetailView: View {
             ChatView(initialPrompt: route.prompt)
         }
     }
-}
 
-private extension NoteDetailView {
-    var titleField: some View {
+    private var titleField: some View {
         TextField("Title", text: $note.title)
             .font(.title2.bold())
             .textFieldStyle(.plain)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .padding(.bottom, 8)
             .background(.thinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 12))
-            .shadow(color: .black.opacity(0.03), radius: 8, y: 2)
     }
-    
-    var contentEditor: some View {
+
+    private var contentEditor: some View {
         ZStack(alignment: .topLeading) {
             if note.content.isEmpty {
                 Text("Write your note here...")
@@ -48,24 +65,24 @@ private extension NoteDetailView {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 16)
             }
-            
+
             TextEditor(text: $note.content)
                 .font(.body)
                 .scrollContentBackground(.hidden)
                 .scrollIndicators(.hidden)
                 .padding(8)
+                .focused($isContentFocused)
         }
         .frame(minHeight: 220, maxHeight: 360)
         .background(.thinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.03), radius: 8, y: 2)
     }
-    
-    var copilotActions: some View {
+
+    private var copilotActions: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Copilot")
                 .font(.headline)
-            
+
             HStack(spacing: 12) {
                 Button(action: summarizeNote) {
                     Label("Summarize", systemImage: "text.alignleft")
@@ -73,37 +90,65 @@ private extension NoteDetailView {
                 }
 
                 Button(action: extractTasks) {
-                    Label("Extract Tasks", systemImage: "checklist")
-                        .frame(maxWidth: .infinity)
+                    if isExtractingTasks {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                    } else {
+                        Label("Extract Tasks", systemImage: "checklist")
+                            .frame(maxWidth: .infinity)
+                    }
                 }
+                .disabled(isExtractingTasks)
             }
             .buttonStyle(.borderedProminent)
         }
-        .padding(.horizontal, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 16)
         .background(.thinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.03), radius: 8, y: 2)
     }
-    
-    
-    func summarizeNote() {
-        let content = note.content.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !content.isEmpty else { return }
-        
-        chatRoute = ChatRoute(
-            prompt: "Summarize this note:\n\n\(content)")
-    }
-    
-    func extractTasks() {
-        let content = note.content.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !content.isEmpty else { return }
-        chatRoute = ChatRoute(
-            prompt: "Summarize this note:\n\n\(content)")
-    }
-}
 
-private struct ChatRoute: Identifiable {
-    let id = UUID()
-    let prompt: String
+    private func summarizeNote() {
+        isContentFocused = false
+
+        let content = note.content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !content.isEmpty else { return }
+
+        chatRoute = ChatRoute(
+            prompt: "Summarize this note:\n\n\(content)"
+        )
+    }
+
+    private func extractTasks() {
+        isContentFocused = false
+
+        let content = note.content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !content.isEmpty else { return }
+
+        Task {
+            await extractAndSaveTasks(from: content)
+        }
+    }
+
+    @MainActor
+    private func extractAndSaveTasks(from content: String) async {
+        isExtractingTasks = true
+        extractionError = nil
+
+        do {
+            let extractedTasks = try await taskExtractionService.extractTasks(from: content)
+
+            for extractedTask in extractedTasks {
+                let task = TaskItem(title: extractedTask.title)
+                modelContext.insert(task)
+            }
+
+            try modelContext.save()
+        } catch {
+            extractionError = "Could not extract tasks. Please try again."
+        }
+
+        isExtractingTasks = false
+    }
 }
