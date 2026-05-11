@@ -14,7 +14,7 @@ This project explores how AI can directly interact with mobile app state through
 
 ## 🎥 Demo
 
-Coming soon
+![AI Copilot Demo](demo.gif)
 
 
 ## 🚀 Features (MVP)
