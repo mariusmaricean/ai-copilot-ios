@@ -43,6 +43,7 @@ This project explores how AI can directly interact with mobile app state through
 Features
 - Chat
 - Notes
+- Tasks
 
 Core
 - AIClient (LLM communication + streaming)
