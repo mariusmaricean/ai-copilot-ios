@@ -9,8 +9,7 @@ import SwiftUI
 
 struct NoteDetailView: View {
     @Bindable var note: Note
-    @State private var showChat = false
-    @State private var initialPrompt: String?
+    @State private var chatRoute: ChatRoute?
     
     var body: some View {
         VStack(spacing: 20) {
@@ -21,8 +20,8 @@ struct NoteDetailView: View {
         .padding()
         .navigationTitle("Note")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $showChat) {
-            ChatView(initialPrompt: initialPrompt)
+        .sheet(item: $chatRoute) { route in
+            ChatView(initialPrompt: route.prompt)
         }
     }
 }
@@ -34,6 +33,7 @@ private extension NoteDetailView {
             .textFieldStyle(.plain)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
+            .padding(.bottom, 8)
             .background(.thinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .shadow(color: .black.opacity(0.03), radius: 8, y: 2)
@@ -52,9 +52,10 @@ private extension NoteDetailView {
             TextEditor(text: $note.content)
                 .font(.body)
                 .scrollContentBackground(.hidden)
+                .scrollIndicators(.hidden)
                 .padding(8)
         }
-        .frame(minHeight: 300, maxHeight: 500)
+        .frame(minHeight: 220, maxHeight: 360)
         .background(.thinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.03), radius: 8, y: 2)
@@ -87,12 +88,22 @@ private extension NoteDetailView {
     
     
     func summarizeNote() {
-        initialPrompt = "Summarize this note:\n\n\(note.content)"
-        showChat = true
+        let content = note.content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !content.isEmpty else { return }
+        
+        chatRoute = ChatRoute(
+            prompt: "Summarize this note:\n\n\(content)")
     }
     
     func extractTasks() {
-        initialPrompt = "Extract action items from this note:\n\n\(note.content)"
-        showChat = true
+        let content = note.content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !content.isEmpty else { return }
+        chatRoute = ChatRoute(
+            prompt: "Summarize this note:\n\n\(content)")
     }
+}
+
+private struct ChatRoute: Identifiable {
+    let id = UUID()
+    let prompt: String
 }
