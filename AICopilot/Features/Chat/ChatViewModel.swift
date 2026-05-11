@@ -13,33 +13,37 @@ final class ChatViewModel: ObservableObject {
     @Published var messages: [ChatMessage] = []
     @Published var inputText = ""
     @Published var isStreaming = false
+    @Published var errorMessage: String?
+
+    private let aiService: AIService
+
+    init(aiService: AIService = OpenAIService()) {
+        self.aiService = aiService
+    }
 
     func send(_ text: String) async {
-        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedText.isEmpty else { return }
 
-        messages.append(ChatMessage(role: .user, content: text))
+        messages.append(ChatMessage(role: .user, content: trimmedText))
         inputText = ""
 
         let assistantMessage = ChatMessage(role: .assistant, content: "")
         messages.append(assistantMessage)
+
         isStreaming = true
+        errorMessage = nil
 
-        let fakeResponse = """
-        Here is a concise summary:
+        do {
+            for try await delta in aiService.streamResponse(for: trimmedText) {
+                guard let index = messages.lastIndex(where: { $0.id == assistantMessage.id }) else {
+                    continue
+                }
 
-        • The note contains key ideas that can be turned into actions.
-        • The main intent is productivity and follow-up.
-        • Suggested next step: create tasks from the extracted points.
-        """
-
-        for character in fakeResponse {
-            try? await Task.sleep(nanoseconds: 20_000_000)
-
-            guard let index = messages.lastIndex(where: { $0.id == assistantMessage.id }) else {
-                continue
+                messages[index].content.append(delta)
             }
-
-            messages[index].content.append(character)
+        } catch {
+            errorMessage = error.localizedDescription
         }
 
         isStreaming = false

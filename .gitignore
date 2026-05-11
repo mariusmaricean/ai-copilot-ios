@@ -1,0 +1,13 @@
+
+# Secrets
+AICopilot/Core/AI/Secrets.swift
+
+# Xcode user state
+*.xcuserstate
+
+# macOS
+.DS_Store
+
+# Build folders
+DerivedData/
+.build/
