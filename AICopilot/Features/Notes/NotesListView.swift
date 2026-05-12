@@ -14,23 +14,33 @@ struct NotesListView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(notes) { note in
-                    NavigationLink {
-                        NoteDetailView(note: note)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(note.title)
-                                .font(.headline)
+            Group {
+                if notes.isEmpty {
+                    ContentUnavailableView(
+                        "No Notes Yet",
+                        systemImage: "note.text",
+                        description: Text("Create your first note to start using AI Copilot.")
+                    )
+                } else {
+                    List {
+                        ForEach(notes) { note in
+                            NavigationLink {
+                                NoteDetailView(note: note)
+                            } label: {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(note.title)
+                                        .font(.headline)
 
-                            Text(note.content.isEmpty ? "No content yet" : note.content)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(2)
+                                    Text(note.content.isEmpty ? "No content yet" : note.content)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(2)
+                                }
+                            }
                         }
+                        .onDelete(perform: deleteNotes)
                     }
                 }
-                .onDelete(perform: deleteNotes)
             }
             .navigationTitle("AI Copilot")
             .toolbar {
