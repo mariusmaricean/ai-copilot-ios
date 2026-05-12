@@ -21,8 +21,15 @@ struct NoteDetailView: View {
     @State private var extractedTasks: [ExtractedTask] = []
     @State private var showTaskReview = false
     @State private var showTasks = false
+    
+    @Query(sort: \Note.createdAt, order: .reverse)
+    private var notes: [Note]
+
+    @Query(sort: \TaskItem.createdAt, order: .reverse)
+    private var tasks: [TaskItem]
 
     private let taskExtractionService = TaskExtractionService()
+    private let memoryContextBuilder = MemoryContextBuilder()
 
     private struct ChatRoute: Identifiable {
         let id = UUID()
@@ -157,18 +164,28 @@ struct NoteDetailView: View {
         guard !content.isEmpty else { return }
 
         Task {
-            await extractAndSaveTasks(from: content)
+            await extractAndReviewTasks(from: content)
         }
     }
 
     @MainActor
-    private func extractAndSaveTasks(from content: String) async {
+    private func extractAndReviewTasks(from content: String) async {
         isExtractingTasks = true
         extractionError = nil
+        extractedTasks = []
 
         do {
-            let tasks = try await taskExtractionService.extractTasks(from: content)
-            extractedTasks = tasks
+            let memoryContext = memoryContextBuilder.build(
+                notes: notes,
+                tasks: tasks
+            )
+
+            let suggestedTasks = try await taskExtractionService.extractTasks(
+                from: content,
+                memoryContext: memoryContext
+            )
+            
+            extractedTasks = suggestedTasks
             showTaskReview = true
         } catch {
             extractionError = "Could not extract tasks. Please try again."
