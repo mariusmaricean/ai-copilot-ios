@@ -10,7 +10,9 @@ import SwiftData
 
 struct TasksListView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \TaskItem.createdAt, order: .reverse) private var tasks: [TaskItem]
+    
+    @Query(sort: \TaskItem.createdAt, order: .reverse)
+    private var tasks: [TaskItem]
 
     var body: some View {
         Group {
