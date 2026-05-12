@@ -16,6 +16,10 @@ This project explores how AI can directly interact with mobile app state through
 
 ![AI Copilot Demo](demo.gif)
 
+### Improved AI task extraction flow
+![AI Copilot Demo](updateDemo.gif)
+
+
 
 ## 🚀 Features (MVP)
 
