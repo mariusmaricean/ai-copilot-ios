@@ -14,7 +14,6 @@ struct MemoryContext {
 }
 
 final class MemoryContextBuilder {
-
     func build(notes: [Note], tasks: [TaskItem]) -> String {
         let recentNotes = notes
             .sorted { $0.createdAt > $1.createdAt }
