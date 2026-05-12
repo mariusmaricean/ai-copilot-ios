@@ -18,6 +18,9 @@ struct NoteDetailView: View {
     @State private var chatRoute: ChatRoute?
     @State private var isExtractingTasks = false
     @State private var extractionError: String?
+    @State private var extractedTasks: [ExtractedTask] = []
+    @State private var showTaskReview = false
+    @State private var showTasks = false
 
     private let taskExtractionService = TaskExtractionService()
 
@@ -43,6 +46,33 @@ struct NoteDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $chatRoute) { route in
             ChatView(initialPrompt: route.prompt)
+        }
+        .sheet(isPresented: $showTaskReview) {
+            TaskReviewView(
+                extractedTasks: extractedTasks,
+                onSave: saveTasks
+            )
+        }
+        .navigationDestination(isPresented: $showTasks) {
+            TasksListView()
+        }
+        .overlay {
+            if isExtractingTasks {
+                ZStack {
+                    Color.black.opacity(0.15)
+                        .ignoresSafeArea()
+
+                    VStack(spacing: 12) {
+                        ProgressView()
+                        Text("Extracting tasks...")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding()
+                    .background(.regularMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                }
+            }
         }
     }
 
@@ -137,18 +167,27 @@ struct NoteDetailView: View {
         extractionError = nil
 
         do {
-            let extractedTasks = try await taskExtractionService.extractTasks(from: content)
-
-            for extractedTask in extractedTasks {
-                let task = TaskItem(title: extractedTask.title)
-                modelContext.insert(task)
-            }
-
-            try modelContext.save()
+            let tasks = try await taskExtractionService.extractTasks(from: content)
+            extractedTasks = tasks
+            showTaskReview = true
         } catch {
             extractionError = "Could not extract tasks. Please try again."
         }
 
         isExtractingTasks = false
+    }
+    
+    private func saveTasks(_ tasks: [ExtractedTask]) {
+        for extractedTask in tasks {
+            let task = TaskItem(title: extractedTask.title)
+            modelContext.insert(task)
+        }
+
+        do {
+            try modelContext.save()
+            showTasks = true
+        } catch {
+            extractionError = "Could not save tasks."
+        }
     }
 }

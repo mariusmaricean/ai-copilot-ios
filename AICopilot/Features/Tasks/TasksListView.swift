@@ -13,18 +13,20 @@ struct TasksListView: View {
     @Query(sort: \TaskItem.createdAt, order: .reverse) private var tasks: [TaskItem]
 
     var body: some View {
-        List {
+        Group {
             if tasks.isEmpty {
-                ContentUnavailableView( 
+                ContentUnavailableView(
                     "No Tasks Yet",
                     systemImage: "checklist",
                     description: Text("Extract tasks from a note to see them here.")
                 )
             } else {
-                ForEach(tasks) { task in
-                    TaskRowView(task: task)
+                List {
+                    ForEach(tasks) { task in
+                        TaskRowView(task: task)
+                    }
+                    .onDelete(perform: deleteTasks)
                 }
-                .onDelete(perform: deleteTasks)
             }
         }
         .navigationTitle("Tasks")
@@ -34,5 +36,7 @@ struct TasksListView: View {
         for index in offsets {
             modelContext.delete(tasks[index])
         }
+
+        try? modelContext.save()
     }
 }

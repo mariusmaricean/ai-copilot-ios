@@ -16,11 +16,16 @@ final class TaskExtractionService {
 
     func extractTasks(from noteContent: String) async throws -> [ExtractedTask] {
         let prompt = """
-        Extract action items from the following note.
+        You are an AI productivity assistant.
 
-        Return ONLY valid JSON.
-        Do not include markdown.
-        Do not include explanations.
+        Extract clear, actionable tasks from the following note.
+
+        Rules:
+        - Return ONLY tasks
+        - Keep titles concise
+        - Avoid duplicates
+        - Ignore vague ideas
+        - Return ONLY valid JSON
 
         Format:
         [
@@ -28,7 +33,7 @@ final class TaskExtractionService {
             "title": "Task title"
           }
         ]
-
+        
         Note:
         \(noteContent)
         """

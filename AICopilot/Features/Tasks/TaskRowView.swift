@@ -13,7 +13,9 @@ struct TaskRowView: View {
     var body: some View {
         HStack(spacing: 12) {
             Button {
-                task.isCompleted.toggle()
+                withAnimation {
+                    task.isCompleted.toggle()
+                }
             } label: {
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
